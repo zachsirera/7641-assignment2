@@ -6,10 +6,15 @@
 
 import csv
 import random
+from sklearn.preprocessing import OneHotEncoder
+import numpy as np
+import pandas as pd
 
 def main(filename):
-	data = get_all_data(filename)
-	training_data, testing_data = separate_data_fixed(0.8, data)
+	# data = get_all_data(filename)
+	df = load_data()
+	df = pd.get_dummies(df, columns=['workclass', 'education', 'marital-status', 'occupation', 'relationship', 'race', 'sex', 'native-country', 'income'])
+	training_data, testing_data = separate_data_fixed(df, 0.8)
 	train_x, train_y = parse(training_data)
 	test_x, test_y = parse(testing_data)
 
@@ -58,63 +63,87 @@ def separate_data_rand(fraction, data):
 
 	return training_data, testing_data
 
-def separate_data_fixed(fraction, data):
+# def separate_data_fixed(fraction, data):
 
-	training_data = []
-	testing_data = []
+# 	training_data = []
+# 	testing_data = []
 
-	for each in data:
-		if len(training_data) / len(data) <= fraction:
-			training_data.append(each)
-		else:
-			testing_data.append(each)
+# 	for each in data:
+# 		if len(training_data) / len(data) <= fraction:
+# 			training_data.append(each)
+# 		else:
+# 			testing_data.append(each)
 
-	return training_data, testing_data
+# 	return training_data, testing_data
 
-
-def parse(dataset):
-	''' This is a function to parse the dataset dictionary and format it properly for implementation '''
-
-	workclass = {'Private': 1, 'Self-emp-not-inc': 2, 'Self-emp-inc': 3, 'Federal-gov': 4, 'Local-gov': 5, 'State-gov': 6, 'Without-pay': 7, 'Never-worked': 8}
-	education = {'Bachelors': 1, 'Some-college': 2, '11th': 3, 'HS-grad': 4, 'Prof-school': 5, 'Assoc-acdm': 6, 'Assoc-voc': 7, '9th': 8, '7th-8th': 9, '12th': 10, 'Masters': 11, '1st-4th': 12, '10th': 13, 'Doctorate': 14, '5th-6th': 15, 'Preschool': 16}
-	marital_status = {'Married-civ-spouse': 1, 'Divorced': 2, 'Never-married': 3, 'Separated': 4, 'Widowed': 5, 'Married-spouse-absent': 6, 'Married-AF-spouse': 7}
-	occupation = {'Tech-support': 1, 'Craft-repair': 2, 'Other-service': 3, 'Sales': 4, 'Exec-managerial': 5, 'Prof-specialty': 7, 'Handlers-cleaners': 8, 'Machine-op-inspct': 9, 'Adm-clerical': 10, 'Farming-fishing': 11, 'Transport-moving': 12, 'Priv-house-serv': 13, 'Protective-serv': 14, 'Armed-Forces': 15}
-	relationship = {'Wife': 1, 'Own-child': 2, 'Husband': 3,'Not-in-family': 4, 'Other-relative': 5, 'Unmarried': 6}
-	race = {'White': 1, 'Asian-Pac-Islander': 2, 'Amer-Indian-Eskimo': 3, 'Other': 4, 'Black': 5}
-	native_country = {'United-States': 1, 'Cambodia': 2, 'England': 3, 'Puerto-Rico': 4, 'Canada': 5, 'Germany': 6, 'Outlying-US(Guam-USVI-etc)': 7, 'India': 8, 'Japan': 9, 'Greece': 10, 'South': 11, 'China': 12, 'Cuba': 13, 'Iran': 14, 'Honduras': 15, 'Philippines': 16, 'Italy': 17, 'Poland': 18, 'Jamaica': 19, 'Vietnam': 20, 'Mexico': 21, 'Portugal': 22, 'Ireland': 22, 'France': 23, 'Dominican-Republic': 24, 'Laos':25, 'Ecuador': 26, 'Taiwan': 27, 'Haiti': 28, 'Columbia': 29, 'Hungary': 30, 'Guatemala': 31, 'Nicaragua': 32, 'Scotland': 33, 'Thailand': 34, 'Yugoslavia': 35, 'El-Salvador': 36, 'Trinadad&Tobago': 37, 'Peru': 38, 'Hong': 39, 'Holand-Netherlands': 40}
-	sex = {'Female': 1, 'Male': 2}
-	income = {'>50K': 1, '<=50K': 2}
+def separate_data_fixed(df, fraction):
 
 
+	msk = np.random.rand(len(df)) < fraction
+	train = df[msk]
+	test = df[~msk]
 
-	x = []
-	y = []
-
-	for row in dataset:
-		if ' ?' in row.values(): 
-			pass
-		else:
-			x.append([
-				int(row['age']),
-				workclass[row['workclass'].lstrip()],
-				float(row['fnlwgt']),
-				education[row['education'].lstrip()],
-				float(row['education-num']),
-				marital_status[row['marital-status'].lstrip()],
-				occupation[row['occupation'].lstrip()],
-				relationship[row['relationship'].lstrip()],
-				race[row['race'].lstrip()],
-				sex[row['sex'].lstrip()],
-				float(row['capital-gain']),
-				float(row['capital-loss']),
-				float(row['hours-per-week']),
-				native_country[row['native-country'].lstrip()]
-			])
-			y.append(income[row['income'].lstrip()])
-
-	return x, y
+	return train, test
 
 
+# def parse(dataset):
+# 	''' This is a function to parse the dataset dictionary and format it properly for implementation '''
+
+# 	workclass = {'Private': [1, 0, 0, 0, 0, 0, 0, 0], 'Self-emp-not-inc': [0, 1, 0, 0, 0, 0, 0, 0], 'Self-emp-inc': [0, 0, 1, 0, 0, 0, 0, 0], 'Federal-gov': [0, 0, 0, 1, 0, 0, 0, 0], 'Local-gov': [0, 0, 0, 0, 1, 0, 0, 0], 'State-gov': [0, 0, 0, 0, 0, 1, 0, 0], 'Without-pay': [0, 0, 0, 0, 0, 0, 1, 0], 'Never-worked': [0, 0, 0, 0, 0, 0, 0, 1]}
+# 	education = {'Bachelors': [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], 'Some-college': [0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], '11th': [0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], 'HS-grad': [0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], 'Prof-school': [0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], 'Assoc-acdm': [0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], 'Assoc-voc': [0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0], '9th': [0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0], '7th-8th': [0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0], '12th': [0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0], 'Masters': [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0], '1st-4th': [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0], '10th': [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0], 'Doctorate': [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0], '5th-6th': [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0], 'Preschool': [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1]}
+# 	marital_status = {'Married-civ-spouse': [1, 0, 0, 0, 0, 0, 0], 'Divorced': [0, 1, 0, 0, 0, 0, 0], 'Never-married': [0, 0, 1, 0, 0, 0, 0], 'Separated': [0, 0, 0, 1, 0, 0, 0], 'Widowed': [0, 0, 0, 0, 1, 0, 0], 'Married-spouse-absent': [0, 0, 0, 0, 0, 1, 0], 'Married-AF-spouse': [0, 0, 0, 0, 0, 0, 1]}
+# 	occupation = {'Tech-support': [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], 'Craft-repair': [0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], 'Other-service': [0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], 'Sales': [0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], 'Exec-managerial': [0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0], 'Prof-specialty': [0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0], 'Handlers-cleaners': [0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0], 'Machine-op-inspct': [0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0], 'Adm-clerical': [0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0], 'Farming-fishing': [0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0], 'Transport-moving': [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0], 'Priv-house-serv': [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0], 'Protective-serv': [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0], 'Armed-Forces': [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1]}
+# 	relationship = {'Wife': [1, 0, 0, 0, 0, 0], 'Own-child': [0, 1, 0, 0, 0, 0], 'Husband': [0, 0, 1, 0, 0, 0],'Not-in-family': [0, 0, 0, 1, 0, 0], 'Other-relative': [0, 0, 0, 0, 1, 0], 'Unmarried': [0, 0, 0, 0, 0, 1]}
+# 	race = {'White': [1, 0, 0, 0, 0], 'Asian-Pac-Islander': [0, 1, 0, 0, 0], 'Amer-Indian-Eskimo': [0, 0, 1, 0, 0], 'Other': [0, 0, 0, 1, 0], 'Black': [0, 0, 0, 0, 1]}
+# 	native_country = {'United-States': [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], 'Cambodia': [0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], 'England': [0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], 'Puerto-Rico': [0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], 'Canada': [0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], 'Germany': [0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], 'Outlying-US(Guam-USVI-etc)': [0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], 'India': [0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], 'Japan': [0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], 'Greece': [0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], 'South': [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], 'China': [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], 'Cuba': [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], 'Iran': [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], 'Honduras': [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], 'Philippines': [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], 'Italy': [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], 'Poland': [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], 'Jamaica': [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], 'Vietnam': [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], 'Mexico': [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], 'Portugal': [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], 'Ireland': [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], 'France': [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], 'Dominican-Republic': [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], 'Laos': [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], 'Ecuador': [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], 'Taiwan': [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], 'Haiti': [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], 'Columbia': [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], 'Hungary': [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], 'Guatemala': [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0], 'Nicaragua': [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0], 'Scotland': [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0], 'Thailand': [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0], 'Yugoslavia': [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0], 'El-Salvador': [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0], 'Trinadad&Tobago': [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0], 'Peru': [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0], 'Hong': [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0], 'Holand-Netherlands': [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1]}
+# 	sex = {'Female': [1, 0], 'Male': [0, 1]}
+# 	income = {'>50K': [1, 0], '<=50K': [0, 1]}
+
+# 	[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+
+# 	x = []
+# 	y = []
+
+# 	for row in dataset:
+# 		if ' ?' in row.values(): 
+# 			pass
+# 		else:
+# 			x.append([
+# 				int(row['age']),
+# 				workclass[row['workclass'].lstrip()],
+# 				float(row['fnlwgt']), #
+# 				education[row['education'].lstrip()],
+# 				float(row['education-num']),#
+# 				marital_status[row['marital-status'].lstrip()],
+# 				occupation[row['occupation'].lstrip()],
+# 				relationship[row['relationship'].lstrip()],
+# 				race[row['race'].lstrip()],
+# 				sex[row['sex'].lstrip()],
+# 				float(row['capital-gain']), #
+# 				float(row['capital-loss']), #
+# 				float(row['hours-per-week']), #
+# 				native_country[row['native-country'].lstrip()]
+# 			])
+# 			y.append(income[row['income'].lstrip()])
+
+# 	return x, y
+
+def parse(df):
+
+	return df.iloc[:, :108], df.iloc[:, 109:]
+
+
+def load_data():
+    return pd.read_csv('adult_data.csv')
+
+# if __name__ == '__main__':
+# 	df = load_data()
+# 	df = pd.get_dummies(df, columns=['workclass', 'education', 'marital-status', 'occupation', 'relationship', 'race', 'sex', 'native-country', 'income'])
+# 	# df_x, df_y = parse(df)
+# 	train_df, test_df = separate_data_fixed(df, 0.8)
+
+# 	print(train_df.shape)
+# 	print(test_df.shape)
 
 
 
