@@ -9,7 +9,8 @@ import matplotlib.lines as mlines
 import time
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import MinMaxScaler, OneHotEncoder
-from sklearn.metrics import accuracy_score
+from sklearn.metrics import accuracy_score, roc_curve, auc
+from sklearn.neural_network import MLPClassifier
 
 # Import any files in the root directory
 import data
@@ -221,7 +222,7 @@ def nn_ga(train_x, train_y, test_x, test_y):
 		for jindex, pop_size in enumerate(pop_sizes):
 
 			nn_model = mlrose.NeuralNetwork(hidden_nodes= [8, 6], activation='tanh', algorithm='genetic_alg', pop_size=pop_size, mutation_prob=mutation_prob, max_iters=1000, 
-			 			bias=True, is_classifier=True, learning_rate=0.0001, early_stopping=True, clip_max=1000, max_attempts=100, random_state=3)
+			 			bias=True, is_classifier=True, learning_rate=0.0001, early_stopping=True, clip_max=1000, max_attempts=100, random_state=3, curve=True)
 
 			fitted_model = nn_model.fit(train_x, train_y)
 
@@ -231,8 +232,8 @@ def nn_ga(train_x, train_y, test_x, test_y):
 
 
 	plt.title("NN Training: GA")
-	plt.xlabel("Fitness")
-	plt.ylabel("Accuracy")
+	plt.xlabel("No. of Iterations")
+	plt.ylabel("Fitness")
 	plt.legend(legend_items, legend_labels, loc="lower right")
 	plt.tight_layout()
 	plt.savefig("nn_ga")
@@ -278,18 +279,304 @@ def nn_sa_temps(train_x, train_y, test_x, test_y):
 
 
 
-def combined_nn():
+def combined_nn(train_x, train_y, test_x, test_y):
 	''' This is a function to combine the three NNs generated in this process and compare them. '''
 
-	rhc = mlrose.NeuralNetwork(hidden_nodes = [8, 6, 5], activation = 'tanh', algorithm = 'random_hill_climb', max_iters = 1000, 
-			 			bias = True, is_classifier = True, learning_rate = 0.001, early_stopping = True, clip_max = 5, max_attempts = 100, random_state = 3)
+	markers = ['o', 'x', '^', 's']
+	colors = ['g', 'b', 'r', 'c']
+	learning_rates = [0.0001, 0.01, 0.1]
 
+
+
+	plot_1 = plt.figure(1)
+
+	for index, learning_rate in enumerate(learning_rates):
+
+		# Random Hill Climb
+		rhc = mlrose.NeuralNetwork(hidden_nodes = [8, 6], activation = 'tanh', algorithm = 'random_hill_climb', max_iters = 1000, 
+				 			bias = True, is_classifier = True, learning_rate = learning_rate, early_stopping = True, clip_max = 5, max_attempts = 100, random_state = 3, curve=True)
+		rhc_start = time.time()	
+		trained_rhc = rhc.fit(train_x, train_y)
+		rhc_duration = time.time() - rhc_start
+
+
+		# Get data for duration vs accuracy curve
+		rhc_test_pred = trained_rhc.predict(test_x)
+		rhc_test_accuracy = accuracy_score(test_y, rhc_test_pred)
+		plt.plot(rhc_duration, rhc_test_accuracy, marker=markers[index], color=colors[0], label="RHC")
+
+
+		# Get data for ROC
+		rhc_probs = trained_rhc.predicted_probs
+		rhc_fpr, rhc_tpr, rhc_threshold = roc_curve(test_y, rhc_probs, pos_label=1)
+		rhc_roc_auc = auc(rhc_fpr, rhc_tpr)
+		rhc_label = "RHC: AUC = " + str(round(rhc_roc_auc, 3))
+
+
+
+		# Simulated Annealing
+		schedule = mlrose.ExpDecay(init_temp=10, exp_const=0.01, min_temp=1)
+		sa = mlrose.NeuralNetwork(hidden_nodes=[8, 6], activation='tanh', algorithm='simulated_annealing', schedule=schedule, max_iters=1000, 
+				 			bias=True, is_classifier=True, learning_rate=learning_rate, early_stopping=True, clip_max=5, max_attempts=100, random_state=3, curve = True)
+
+		sa_start = time.time()
+		trained_sa = sa.fit(train_x, train_y)
+		sa_duration = time.time() - sa_start
+
+		# Get data for duration vs accuracy curve
+		sa_test_pred = trained_sa.predict(test_x)
+		sa_test_accuracy = accuracy_score(test_y, sa_test_pred)
+		plt.plot(sa_duration, sa_test_accuracy, marker=markers[index], color=colors[1], label="SA")
+
+		# Get data for ROC curve
+		sa_probs = trained_sa.predicted_probs
+		sa_fpr, sa_tpr, sa_threshold = roc_curve(test_y, sa_probs, pos_label=1)
+		sa_roc_auc = auc(sa_fpr, sa_tpr)
+		sa_label = "SA: AUC = " + str(round(sa_roc_auc, 3))
+
+
+		# Genetic Algorithm
+		ga = mlrose.NeuralNetwork(hidden_nodes= [8, 6], activation='tanh', algorithm='genetic_alg', pop_size=200, mutation_prob=0.1, max_iters=1000, 
+				 			bias=True, is_classifier=True, learning_rate=learning_rate, early_stopping=True, clip_max=1000, max_attempts=100, random_state=3, curve=True)
+
+		ga_start = time.time()
+		trained_ga = ga.fit(train_x, train_y)
+		ga_duration = time.time() - ga_start
+
+		# Get data for duration vs accuracy curve
+		ga_test_pred = trained_ga.predict(test_x)
+		ga_test_accuracy = accuracy_score(test_y, ga_test_pred)
+		plt.plot(ga_duration, ga_test_accuracy, marker=markers[index], color=colors[2], label="GA")
+
+		# Get data for ROC curve
+		ga_probs = trained_ga.predicted_probs
+		ga_fpr, ga_tpr, ga_threshold = roc_curve(test_y, ga_probs, pos_label=1)
+		ga_roc_auc = auc(ga_fpr, ga_tpr)
+		ga_label = "GA: AUC = " + str(round(ga_roc_auc, 3))
+
+
+		# Assignment 1's Neural Network 
+		old = MLPClassifier(solver='sgd', alpha=1e-5, learning_rate_init=learning_rate, activation='tanh', hidden_layer_sizes=(8, 6), random_state=1)
+
+		old_start = time.time()
+		trained_old = old.fit(train_x, np.ravel(train_y))
+		old_duration = time.time() - old_start
+
+		# Get data for duration vs accuracy curve
+		old_test_pred = trained_old.predict(test_x)
+		old_test_accuracy = accuracy_score(test_y, old_test_pred)
+		plt.plot(old_duration, old_test_accuracy, marker=markers[index], color=colors[3], label="A1")
+
+		# Get data for ROC Curve
+		old_probs = []
+
+		for index, each in test_x.iterrows():
+			prob = old.predict_proba([each])
+			old_probs.append(prob[:,1][0])
+
+		old_fpr, old_tpr, old_threshold = roc_curve(test_y, old_probs, pos_label=1)
+		old_roc_auc = auc(old_fpr, old_tpr)
+		old_label = "A1: AUC = " + str(round(old_roc_auc, 3))
+
+	
+	legend_items = [mlines.Line2D([], [], color='k', marker='o', markersize=5, linestyle='None'),
+					mlines.Line2D([], [], color='k', marker='x', markersize=5, linestyle='None'),
+					mlines.Line2D([], [], color='k', marker='^', markersize=5, linestyle='None'),
+					mlines.Line2D([0], [0], color='g', lw=2),
+					mlines.Line2D([0], [0], color='b', lw=2),
+					mlines.Line2D([0], [0], color='r', lw=2),
+					mlines.Line2D([0], [0], color='c', lw=2)]
+
+	legend_labels = ['0.0001', '0.01', '0.1', 'RHC', 'SA', 'GA', 'A1']
+
+
+
+
+	# Plot the duration vs accuracy chart
+	plt.xlabel("Training Duration (s)")
+	plt.xscale("log")
+	plt.ylabel("Test Accuracy")
+	plt.title("Neural Networks \n Learning Rate")
+	plt.legend(legend_items, legend_labels, loc="upper right")
+	plt.tight_layout()
+	plt.savefig("nn_combined_duration")
+	plt.cla()
+
+
+
+	# # Plot the ROC chart
+	plot_2 = plt.figure(2)
+
+	plt.plot(rhc_fpr, rhc_tpr, label=rhc_label)
+	plt.plot(old_fpr, old_tpr, label=old_label)
+	plt.plot(sa_fpr, sa_tpr, label=sa_label)
+	plt.plot(ga_fpr, ga_tpr, label=ga_label)
+
+	plt.xlabel("False Positive Rate")
+	plt.ylabel("True Positive Rate")
+	plt.title("Neural Networks")
+	plt.legend(loc="lower right")
+	plt.tight_layout()
+	plt.savefig("nn_rocs")
+	plt.cla()
+
+
+def combined_fitness_curves(train_x, train_y, test_x, test_y):
+
+	markers = ['o', 'x', '^', 's']
+	colors = ['g', 'b', 'r', 'c']
+
+
+
+
+	# Random Hill Climb
+	rhc = mlrose.NeuralNetwork(hidden_nodes = [8, 6], activation = 'tanh', algorithm = 'random_hill_climb', max_iters = 1000, 
+			 			bias = True, is_classifier = True, learning_rate = 0.01, early_stopping = True, clip_max = 5, max_attempts = 100, random_state = 3, curve=True)
+	
+	trained_rhc = rhc.fit(train_x, train_y)
+	plt.plot(trained_rhc.fitness_curve, label="RHC")
+	
+
+
+
+	# Simulated Annealing
 	schedule = mlrose.ExpDecay(init_temp=10, exp_const=0.01, min_temp=1)
+	sa = mlrose.NeuralNetwork(hidden_nodes=[8, 6], activation='tanh', algorithm='simulated_annealing', schedule=schedule, max_iters=1000, 
+			 			bias=True, is_classifier=True, learning_rate=0.01, early_stopping=True, clip_max=5, max_attempts=100, random_state=3, curve = True)
 
-	sa = mlrose.NeuralNetwork(hidden_nodes=[8, 6, 5], activation='tanh', algorithm='simulated_annealing', schedule=schedule, max_iters=1000, 
-			 			bias=True, is_classifier=True, learning_rate=0.0001, early_stopping=True, clip_max=5, max_attempts=100, random_state=3)
+	trained_sa = sa.fit(train_x, train_y)
+	plt.plot(trained_sa.fitness_curve, label="SA")
 
-	# ga = 
+
+
+
+	# Genetic Algorithm
+	ga = mlrose.NeuralNetwork(hidden_nodes= [8, 6], activation='tanh', algorithm='genetic_alg', pop_size=200, mutation_prob=0.1, max_iters=1000, 
+			 			bias=True, is_classifier=True, learning_rate=0.01, early_stopping=True, clip_max=1000, max_attempts=100, random_state=3, curve=True)
+
+	trained_ga = ga.fit(train_x, train_y)
+	plt.plot(trained_ga.fitness_curve, label="SA")
+
+
+
+	# # Assignment 1's Neural Network 
+	# old = MLPClassifier(solver='sgd', alpha=1e-5, learning_rate_init=learning_rate, activation='tanh', hidden_layer_sizes=(8, 6), random_state=1)
+
+	# trained_old = old.fit(train_x, np.ravel(train_y))
+
+	
+	
+
+
+
+	# Plot the duration vs accuracy chart
+	plt.xlabel("No of Iterations")
+	plt.ylabel("Fitness")
+	plt.title("Neural Networks")
+	plt.legend(loc="lower right")
+	plt.tight_layout()
+	plt.savefig("nn_combined_fitness")
+	plt.cla()
+
+
+
+def combined_learning_curves(train_x, train_y, test_x, test_y):
+
+	train_accuracy = []
+	test_accuracy = []
+
+	for i in range(1, 1000, 50):
+
+		# Random Hill Climb
+		rhc = mlrose.NeuralNetwork(hidden_nodes = [8, 6], activation = 'tanh', algorithm = 'random_hill_climb', max_iters = 1000, 
+				 			bias = True, is_classifier = True, learning_rate = 0.01, early_stopping = True, clip_max = 5, max_attempts = 100, random_state = 3, curve=True)
+		
+		trained_rhc = rhc.fit(train_x, train_y)
+
+		rhc_accuracy = []
+
+		rhc_train_pred = trained_rhc.predict(train_x)
+		rhc_train_accuracy = accuracy_score(train_y, rhc_train_pred)
+
+		rhc_test_pred = trained_rhc.predict(test_x)
+		rhc_test_accuracy = accuracy_score(test_y, rhc_test_pred)
+
+		rhc_accuracy.append({"i": i, "train": rhc_train_accuracy, "test": rhc_test_accuracy})
+
+
+
+		# Simulated Annealing
+		schedule = mlrose.ExpDecay(init_temp=10, exp_const=0.01, min_temp=1)
+		sa = mlrose.NeuralNetwork(hidden_nodes=[8, 6], activation='tanh', algorithm='simulated_annealing', schedule=schedule, max_iters=1000, 
+				 			bias=True, is_classifier=True, learning_rate=0.01, early_stopping=True, clip_max=5, max_attempts=100, random_state=3, curve = True)
+
+		trained_sa = sa.fit(train_x, train_y)
+
+		sa_accuracy = []
+
+		sa_train_pred = trained_sa.predict(train_x)
+		sa_train_accuracy = accuracy_score(train_y, sa_train_pred)
+
+		sa_test_pred = trained_sa.predict(test_x)
+		sa_test_accuracy = accuracy_score(test_y, sa_test_pred)
+
+		sa_accuracy.append({"i": i, "train": sa_train_accuracy, "test": sa_test_accuracy})
+
+
+
+
+		# Genetic Algorithm
+		ga = mlrose.NeuralNetwork(hidden_nodes= [8, 6], activation='tanh', algorithm='genetic_alg', pop_size=200, mutation_prob=0.1, max_iters=1000, 
+				 			bias=True, is_classifier=True, learning_rate=0.01, early_stopping=True, clip_max=1000, max_attempts=100, random_state=3, curve=True)
+
+		trained_ga = ga.fit(train_x, train_y)
+		plt.plot(trained_ga.fitness_curve, label="SA")
+
+		ga_accuracy = []
+
+		ga_train_pred = trained_ga.predict(train_x)
+		ga_train_accuracy = accuracy_score(train_y, ga_train_pred)
+
+		ga_test_pred = trained_ga.predict(test_x)
+		ga_test_accuracy = accuracy_score(test_y, ga_test_pred)
+
+		ga_accuracy.append({"i": i, "train": ga_train_accuracy, "test": ga_test_accuracy})
+
+
+	# Plot Training curves
+	plt.plot([x['i'] for x in rhc_accuracy], [y['train'] for y in rhc_accuracy], linestyle=":", color='r')
+	plt.plot([x['i'] for x in sa_accuracy], [y['train'] for y in sa_accuracy], linestyle=":", color='g')
+	plt.plot([x['i'] for x in ga_accuracy], [y['train'] for y in ga_accuracy], linestyle=":", color='b')
+
+
+	# Plot Testing curves
+	plt.plot([x['i'] for x in rhc_accuracy], [y['test'] for y in rhc_accuracy], linestyle="-", color='r')
+	plt.plot([x['i'] for x in sa_accuracy], [y['test'] for y in sa_accuracy], linestyle="-", color='g')
+	plt.plot([x['i'] for x in ga_accuracy], [y['test'] for y in ga_accuracy], linestyle="-", color='b')
+
+	legend_items = [
+				mlines.Line2D([0], [0], color='r', lw=2),
+				mlines.Line2D([0], [0], color='g', lw=2),
+				mlines.Line2D([0], [0], color='b', lw=2),
+				mlines.Line2D([0], [0], color='k', lw=2, linestyle=":"),
+				mlines.Line2D([0], [0], color='k', lw=2, linestyle="-")
+				]
+
+	legend_labels = ['RHC', 'SA', 'GA', 'Train', 'Test']
+
+
+
+	# Plot the duration vs accuracy chart
+	plt.xlabel("No. of Iterations")
+	plt.ylabel("Accuracy")
+	plt.title("Neural Networks: Learning Curves")
+	plt.legend(legend_items, legend_labels, loc="upper right")
+	plt.tight_layout()
+	plt.savefig("nn_combined_learning_curves")
+	plt.cla()
+
+
+
 
 
 if __name__ == '__main__':
@@ -305,7 +592,11 @@ if __name__ == '__main__':
 
 	# nn_sa_temps(train_x, train_y, test_x, test_y)
 
-	nn_ga(train_x, train_y, test_x, test_y)
+	# nn_ga(train_x, train_y, test_x, test_y)
+
+	# combined_nn(train_x, train_y, test_x, test_y)
+
+	combined_fitness_curves(train_x, train_y, test_x, test_y)
 
 
 
