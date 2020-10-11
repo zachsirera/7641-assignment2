@@ -482,8 +482,9 @@ def combined_fitness_curves(train_x, train_y, test_x, test_y):
 
 def combined_learning_curves(train_x, train_y, test_x, test_y):
 
-	train_accuracy = []
-	test_accuracy = []
+	rhc_accuracy = []
+	sa_accuracy = []
+	ga_accuracy = []
 
 	for i in range(1, 1000, 50):
 
@@ -492,8 +493,6 @@ def combined_learning_curves(train_x, train_y, test_x, test_y):
 				 			bias = True, is_classifier = True, learning_rate = 0.01, early_stopping = True, clip_max = 5, max_attempts = 100, random_state = 3, curve=True)
 		
 		trained_rhc = rhc.fit(train_x, train_y)
-
-		rhc_accuracy = []
 
 		rhc_train_pred = trained_rhc.predict(train_x)
 		rhc_train_accuracy = accuracy_score(train_y, rhc_train_pred)
@@ -504,15 +503,12 @@ def combined_learning_curves(train_x, train_y, test_x, test_y):
 		rhc_accuracy.append({"i": i, "train": rhc_train_accuracy, "test": rhc_test_accuracy})
 
 
-
 		# Simulated Annealing
 		schedule = mlrose.ExpDecay(init_temp=10, exp_const=0.01, min_temp=1)
 		sa = mlrose.NeuralNetwork(hidden_nodes=[8, 6], activation='tanh', algorithm='simulated_annealing', schedule=schedule, max_iters=1000, 
 				 			bias=True, is_classifier=True, learning_rate=0.01, early_stopping=True, clip_max=5, max_attempts=100, random_state=3, curve = True)
 
 		trained_sa = sa.fit(train_x, train_y)
-
-		sa_accuracy = []
 
 		sa_train_pred = trained_sa.predict(train_x)
 		sa_train_accuracy = accuracy_score(train_y, sa_train_pred)
@@ -531,8 +527,6 @@ def combined_learning_curves(train_x, train_y, test_x, test_y):
 
 		trained_ga = ga.fit(train_x, train_y)
 		plt.plot(trained_ga.fitness_curve, label="SA")
-
-		ga_accuracy = []
 
 		ga_train_pred = trained_ga.predict(train_x)
 		ga_train_accuracy = accuracy_score(train_y, ga_train_pred)
@@ -580,23 +574,26 @@ def combined_learning_curves(train_x, train_y, test_x, test_y):
 
 
 if __name__ == '__main__':
+
 	train_x, train_y, test_x, test_y = data.main('adult_data.csv')
 
 	# train_rhc_nn(train_x, train_y, test_x, test_y)
-	# print(accuracy_score(test_y, y_test_pred))
-
 	# rhc_nn_loss_by_activation(train_x, train_y, test_x, test_y)
+
 
 	# train_sa_nn(train_x, train_y, test_x, test_y)
 	# nn_sa_tanh_training(train_x, train_y, test_x, test_y)
-
 	# nn_sa_temps(train_x, train_y, test_x, test_y)
+
+ 
 
 	# nn_ga(train_x, train_y, test_x, test_y)
 
 	# combined_nn(train_x, train_y, test_x, test_y)
+	# combined_fitness_curves(train_x, train_y, test_x, test_y)
+	# combined_learning_curves(train_x, train_y, test_x, test_y)
 
-	combined_fitness_curves(train_x, train_y, test_x, test_y)
+	pass
 
 
 

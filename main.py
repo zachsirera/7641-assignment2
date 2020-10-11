@@ -332,6 +332,7 @@ def salesman():
 
 def ts_sa_decay_schedules(): 
 	######## Compare decay schedules
+	colors = ['b', 'r', 'g', 'k', 'c', 'm']
 
 	# from get_salesman_coords
 	coords_big = [(73, 75), (22, 65), (84, 71), (63, 57), (66, 57), (92, 48), (57, 18), (91, 7), (67, 90), (57, 52), (0, 85), 
@@ -344,7 +345,7 @@ def ts_sa_decay_schedules():
 	(27, 71), (6, 57), (41, 48), (17, 72), (82, 30), (22, 66), (56, 29), (98, 75), (1, 81), (52, 16)]
 	
 	fitness_fn = mlrose.TravellingSales(coords=coords_big)
-	optim = mlrose.TSPOpt(len(coords), fitness_fn=fitness_fn)
+	optim = mlrose.TSPOpt(len(coords_big), fitness_fn=fitness_fn)
 
 	schedules = [
 	{"title": "Geometric", "schedule": mlrose.GeomDecay(init_temp=10, decay=0.95, min_temp=1), "abbrev": "geom"},
@@ -381,7 +382,7 @@ def ts_sa_sched_params():
 	(27, 71), (6, 57), (41, 48), (17, 72), (82, 30), (22, 66), (56, 29), (98, 75), (1, 81), (52, 16)]
 	
 	fitness_fn = mlrose.TravellingSales(coords=coords_big)
-	optim = mlrose.TSPOpt(len(coords), fitness_fn=fitness_fn)
+	optim = mlrose.TSPOpt(len(coords_big), fitness_fn=fitness_fn)
 
 	fitness = []
 
@@ -442,7 +443,7 @@ def ts_ga_pop_size():
 	(27, 71), (6, 57), (41, 48), (17, 72), (82, 30), (22, 66), (56, 29), (98, 75), (1, 81), (52, 16)]
 	
 	fitness_fn = mlrose.TravellingSales(coords=coords_big)
-	optim = mlrose.TSPOpt(len(coords), fitness_fn=fitness_fn)
+	optim = mlrose.TSPOpt(len(coords_big), fitness_fn=fitness_fn)
 
 	fitness = []
 
@@ -474,7 +475,7 @@ def ts_ga_mut_prob():
 	(27, 71), (6, 57), (41, 48), (17, 72), (82, 30), (22, 66), (56, 29), (98, 75), (1, 81), (52, 16)]
 	
 	fitness_fn = mlrose.TravellingSales(coords=coords_big)
-	optim = mlrose.TSPOpt(len(coords), fitness_fn=fitness_fn)
+	optim = mlrose.TSPOpt(len(coords_big), fitness_fn=fitness_fn)
 
 	######### Compare mutation rates for genetic algorithm
 	mutations = [0.05, 0.1, 0.2, 0.5]
@@ -509,7 +510,7 @@ def ts_m_pop_size():
 	(27, 71), (6, 57), (41, 48), (17, 72), (82, 30), (22, 66), (56, 29), (98, 75), (1, 81), (52, 16)]
 	
 	fitness_fn = mlrose.TravellingSales(coords=coords_big)
-	optim = mlrose.TSPOpt(len(coords), fitness_fn=fitness_fn)
+	optim = mlrose.TSPOpt(len(coords_big), fitness_fn=fitness_fn)
 
 	fitness = []
 
@@ -540,7 +541,7 @@ def ts_m_keep_pct():
 	(27, 71), (6, 57), (41, 48), (17, 72), (82, 30), (22, 66), (56, 29), (98, 75), (1, 81), (52, 16)]
 	
 	fitness_fn = mlrose.TravellingSales(coords=coords_big)
-	optim = mlrose.TSPOpt(len(coords), fitness_fn=fitness_fn)
+	optim = mlrose.TSPOpt(len(coords_big), fitness_fn=fitness_fn)
 
 	mutations = [0.05, 0.1, 0.2, 0.5]
 	colors = ['r', 'b', 'g', 'k']
@@ -562,7 +563,7 @@ def ts_m_keep_pct():
 
 
 
-def four_peaks_problem_size_duration():
+def fp_problem_size_duration():
 	######## Generate combined fitness curve chart using results from feature sweep for different problem sizes 
 
 
@@ -654,7 +655,7 @@ def four_peaks():
 	# ######## Generate combined fitness curve chart using results from feature sweep
 
 
-	# schedule = mlrose.ExpDecay(init_temp=10, exp_const=0.55, min_temp=3)
+	schedule = mlrose.ExpDecay(init_temp=10, exp_const=0.55, min_temp=3)
 
 	sa_state, sa_fitness, sa_curve = mlrose.simulated_annealing(optim, curve=True, max_attempts=10, schedule=schedule)
 	rhc_state, rhc_fitness, rhc_curve = mlrose.random_hill_climb(optim, curve=True, restarts=100)
@@ -677,7 +678,7 @@ def four_peaks():
 
 
 
-def four_peaks_decay_schedules():
+def fp_decay_schedules():
 
 	problem_name = "Four Peaks"
 
@@ -715,7 +716,7 @@ def four_peaks_decay_schedules():
 	# Best occurs at schedule = exponential
 
 
-def four_peaks_ga_population_size():
+def fp_ga_population_size():
 
 	problem_name = "Four Peaks"
 
@@ -743,7 +744,7 @@ def four_peaks_ga_population_size():
 	# Best occurs around pop_size = 3
 
 
-def four_peaks_ga_mut_prob():
+def fp_ga_mut_prob():
 	######### Compare mutation rates for genetic algorithm
 
 	problem_name = "Four Peaks"
@@ -770,7 +771,7 @@ def four_peaks_ga_mut_prob():
 	# Best occurs at mutation_prob = 0.05
 
 
-def four_peaks_m_pop_size():
+def fp_m_pop_size():
 	######### Compare population sizes for mimic
 
 	problem_name = "Four Peaks"
@@ -796,7 +797,7 @@ def four_peaks_m_pop_size():
 	# Best occurs at pop_size = 5
 
 
-def four_peaks_m_keep_pct():
+def fp_m_keep_pct():
 	######### Compare mutation rates for mimic
 
 	problem_name = "Four Peaks"
@@ -820,7 +821,7 @@ def four_peaks_m_keep_pct():
 
 	#### Best occurs at keep_pct = 0.4
 
-def four_peaks_sa_sched_params():
+def fp_sa_sched_params():
 
 	problem_name = "Four Peaks"
 
@@ -1046,6 +1047,7 @@ def k_sa_decay_schedules():
 	max_weight_pct = 0.5
 
 	problem_name = "Knapsack"
+	colors = ['b', 'r', 'g', 'k']
 
 	fitness = mlrose.Knapsack(weights, values, max_weight_pct)
 	optim = mlrose.DiscreteOpt(len(weights), fitness, maximize=True)
@@ -1055,7 +1057,7 @@ def k_sa_decay_schedules():
 
 		plt.plot(fitness_curve, c=colors[index], lw=0.5, label=str(schedule['title']))
 
-	plt.title(problem_name + ": " + str(model['title']) + " \n Decay Schedules, 10 Attempts")
+	plt.title("Knapsack: Simmulated Annealing" + " \n Decay Schedules, 10 Attempts")
 	plt.xlabel("No. of Iterations")
 	plt.ylabel("Fitness")
 	plt.legend(loc="lower right")
@@ -1126,6 +1128,14 @@ def k_sched_param_min_temp():
 
 def k_combined_fitness_chart():
 	# Generate combined fitness curve chart
+
+	weights = [10, 6, 3, 7, 6, 4, 2, 6, 2, 9, 6, 3, 7, 8, 4, 5, 5, 7, 5, 8]
+	values = [3, 6, 10, 8, 10, 2, 10, 6, 2, 7, 3, 2, 2, 5, 3, 9, 2, 5, 5, 5]
+	max_weight_pct = 0.5
+
+	fitness = mlrose.Knapsack(weights, values, max_weight_pct)
+	optim = mlrose.DiscreteOpt(len(weights), fitness, maximize=True)
+
 	sa_state, sa_fitness, sa_curve = mlrose.simulated_annealing(optim, curve = True, max_attempts=100)
 	rhc_state, rhc_fitness, rhc_curve = mlrose.random_hill_climb(optim, curve=True, restarts=100)
 	ga_state, ga_fitness, ga_curve = mlrose.genetic_alg(optim, pop_size=10, curve=True, max_attempts=100)
@@ -1154,8 +1164,8 @@ def k_ga_pop_size():
 
 	problem_name = "Knapsack"
 
-	fitness = mlrose.Knapsack(weights, values, max_weight_pct)
-	optim = mlrose.DiscreteOpt(len(weights), fitness, maximize=True)
+	fitness_fn = mlrose.Knapsack(weights, values, max_weight_pct)
+	optim = mlrose.DiscreteOpt(len(weights), fitness_fn, maximize=True)
 
 	for i in range(100,1100,100):
 		best_state, best_fitness, fitness_curve = mlrose.genetic_alg(optim, curve=True, max_attempts=10, pop_size=i)
@@ -1362,22 +1372,48 @@ def k_problem_size_duration():
 
 if __name__ == '__main__':
 	
+	# Get the grid for the TS problem. The output of this was copied so that each function was evaluated on the same input. 
 	# print(get_salesman_coords(25))
+
 	# salesman()
+	# ts_sa_decay_schedules()
+	# ts_sa_decay_schedules()
+	# ts_sa_sched_params()
+	# ts_ga_pop_size()
+	# ts_ga_mut_prob()
+	# ts_m_pop_size()
+	# ts_m_keep_pct()
+	
+	
 
-	# get_6_peaks_state(10)
 	# four_peaks()
-	# four_peaks_problem_size_duration()
+	# fp_problem_size_duration()
+	# fp_decay_schedules()
+	# fp_ga_population_size()
+	# fp_ga_mut_prob()
+	# fp_m_pop_size()
+	# fp_m_keep_pct()
+	# fp_sa_sched_params()
 
-	# print(get_values(50))
-	# print(get_weights(50))
 
-
+	# Get weights and values. These were copied too. 
 	# print(get_values(100))
 	# print(get_weights(100))
+
 	# knapsack()
 	# k_problem_size_duration()
 	# k_sched_param_min_temp()
+	# k_sa_decay_schedules()
+	# k_sched_param_decay()
+	# k_combined_fitness_chart()
+	# k_ga_pop_size()
+	# k_ga_mut_prob()
+	# k_m_keep_pct()
+	# k_m_pop_size()
+
+
+
+	pass
 
 
 		
